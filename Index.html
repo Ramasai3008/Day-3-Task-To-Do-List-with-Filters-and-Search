@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Task Form Application</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            background: #fff;
+            padding: 20px 25px;
+            width: 380px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .search-box {
+            margin-bottom: 15px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+
+        .task {
+            margin-bottom: 15px;
+        }
+
+        .task label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .task input {
+            width: 100%;
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            margin-bottom: 5px;
+        }
+
+        .due-date {
+            font-size: 13px;
+            color: #555;
+        }
+
+        .completed {
+            border: 2px solid green;
+            background: #eaffea;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        button {
+            width: 100%;
+            margin-top: 10px;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            background: #d9534f;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #c9302c;
+        }
+
+        .stats {
+            margin-top: 15px;
+            padding-top: 10px;
+            border-top: 1px solid #ccc;
+        }
+
+        .stats p {
+            margin: 5px 0;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Task Application</h2>
+
+    <!-- Search Bar -->
+    <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Search by task number (1,2,3)">
+    </div>
+
+    <!-- Task 1 -->
+    <div class="task" id="task1">
+        <label>Task-1 : Name</label>
+        <input type="text" id="nameTask" placeholder="Fill the name">
+        <input type="date" id="nameDue">
+        <div class="due-date" id="nameDueDisplay"></div>
+    </div>
+
+    <!-- Task 2 -->
+    <div class="task" id="task2">
+        <label>Task-2 : Phone</label>
+        <input type="number" id="phoneTask" placeholder="Fill the number">
+        <input type="date" id="phoneDue">
+        <div class="due-date" id="phoneDueDisplay"></div>
+    </div>
+
+    <!-- Task 3 -->
+    <div class="task" id="task3">
+        <label>Task-3 : Email</label>
+        <input type="email" id="emailTask" placeholder="Fill the email">
+        <input type="date" id="emailDue">
+        <div class="due-date" id="emailDueDisplay"></div>
+    </div>
+
+    <button onclick="removeCompletedTasks()">Remove Completed Tasks</button>
+
+    <div class="stats">
+        <p>Total Tasks: <span id="total">3</span></p>
+        <p>Completed Tasks: <span id="completed">0</span></p>
+        <p>Pending Tasks: <span id="pending">3</span></p>
+    </div>
+</div>
+
+<script>
+    const tasks = [
+        {
+            input: document.getElementById("nameTask"),
+            due: document.getElementById("nameDue"),
+            dueDisplay: document.getElementById("nameDueDisplay"),
+            container: document.getElementById("task1")
+        },
+        {
+            input: document.getElementById("phoneTask"),
+            due: document.getElementById("phoneDue"),
+            dueDisplay: document.getElementById("phoneDueDisplay"),
+            container: document.getElementById("task2")
+        },
+        {
+            input: document.getElementById("emailTask"),
+            due: document.getElementById("emailDue"),
+            dueDisplay: document.getElementById("emailDueDisplay"),
+            container: document.getElementById("task3")
+        }
+    ];
+
+    function updateStatus() {
+        let completed = 0;
+
+        tasks.forEach(task => {
+            if (task.input.value.trim() !== "") {
+                task.input.classList.add("completed");
+                completed++;
+            } else {
+                task.input.classList.remove("completed");
+            }
+
+            if (task.due.value) {
+                task.dueDisplay.innerText = "Due Date: " + task.due.value;
+            } else {
+                task.dueDisplay.innerText = "";
+            }
+        });
+
+        document.getElementById("completed").innerText = completed;
+        document.getElementById("pending").innerText = tasks.length - completed;
+
+        saveData();
+    }
+
+    function saveData() {
+        const data = tasks.map(task => ({
+            value: task.input.value,
+            due: task.due.value
+        }));
+
+        localStorage.setItem("taskData", JSON.stringify(data));
+    }
+
+    function removeCompletedTasks() {
+        tasks.forEach(task => {
+            if (task.input.value.trim() !== "") {
+                task.input.value = "";
+                task.input.classList.remove("completed");
+                task.due.value = "";
+                task.dueDisplay.innerText = "";
+            }
+        });
+
+        saveData();
+        updateStatus();
+    }
+
+    // ✅ Correct Search Function (Search by Task Number)
+    document.getElementById("searchInput").addEventListener("input", function() {
+        const keyword = this.value.trim();
+
+        if (keyword === "") {
+            tasks.forEach(task => {
+                task.container.classList.remove("hidden");
+            });
+            return;
+        }
+
+        tasks.forEach((task, index) => {
+            const taskNumber = (index + 1).toString();
+
+            if (keyword === taskNumber) {
+                task.container.classList.remove("hidden");
+            } else {
+                task.container.classList.add("hidden");
+            }
+        });
+    });
+
+    // Load saved data
+    window.onload = () => {
+        const savedData = JSON.parse(localStorage.getItem("taskData"));
+
+        if (savedData) {
+            savedData.forEach((data, index) => {
+                tasks[index].input.value = data.value || "";
+                tasks[index].due.value = data.due || "";
+            });
+        }
+
+        updateStatus();
+    };
+
+    tasks.forEach(task => {
+        task.input.addEventListener("input", updateStatus);
+        task.due.addEventListener("change", updateStatus);
+    });
+</script>
+
+</body>
+</html>
